@@ -1,17 +1,21 @@
-interface ConfidenceItem {
-  label: string;
-  score: number;
-  detail?: string;
-}
+import { useQuery } from "@tanstack/react-query";
+import { getDemandIntelligence } from "@/services/forecasting";
+import type { ModelConfidence } from "@/types/api";
+import { EmptyBlock, ErrorBlock, LoadingBlock } from "@/components/common/data-state";
 
-const items: ConfidenceItem[] = [
-  { label: "Demand model", score: 94, detail: "MAPE 5.9%" },
-  { label: "Routing engine", score: 91, detail: "12 agents online" },
-  { label: "Risk classifier", score: 87, detail: "AUC 0.93" },
-  { label: "Anomaly detection", score: 96, detail: "F1 0.91" },
-];
+export function AIConfidence({ items: overrideItems }: { items?: ModelConfidence[] }) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["demand-intelligence"],
+    queryFn: getDemandIntelligence,
+    enabled: !overrideItems,
+    staleTime: 60_000,
+  });
+  const items = overrideItems ?? data?.modelConfidence ?? [];
 
-export function AIConfidence() {
+  if (!overrideItems && isLoading) return <LoadingBlock />;
+  if (!overrideItems && error) return <ErrorBlock error={error} onRetry={() => refetch()} />;
+  if (!items.length) return <EmptyBlock label="No confidence data returned" />;
+
   return (
     <div className="rounded-md border border-border bg-surface p-5">
       <div className="flex items-center justify-between">
@@ -26,7 +30,10 @@ export function AIConfidence() {
               <span className="font-semibold text-foreground">{it.score}%</span>
             </div>
             <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
-              <div className="h-full rounded-full bg-gradient-primary transition-all" style={{ width: `${it.score}%` }} />
+              <div
+                className="h-full rounded-full bg-gradient-primary transition-all"
+                style={{ width: `${it.score}%` }}
+              />
             </div>
             {it.detail && <p className="mt-1 text-[10px] text-muted-foreground">{it.detail}</p>}
           </div>

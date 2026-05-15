@@ -1,11 +1,8 @@
 import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Pie, PieChart, Sector, Cell } from "recharts";
-import {
-  logisticsMonthOrder,
-  monthlyLogisticsByMonth,
-  type LogisticsSlice,
-  type LogisticsMonthId,
-} from "@/mock/monthly-logistics-data";
+import { getMonthlyLogistics } from "@/services/dashboard";
+import type { LogisticsSlice } from "@/types/api";
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart";
 import {
   Select,
@@ -14,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EmptyBlock, ErrorBlock, LoadingBlock } from "@/components/common/data-state";
 import { cn } from "@/lib/utils";
 
 const chartConfig = {
@@ -83,9 +81,7 @@ function LogisticsTooltipBody({
         <span className="font-medium">{row.value.toLocaleString("en-US")}</span>{" "}
         <span className="text-muted-foreground">shipments</span>
       </p>
-      <p className="mt-1 text-muted-foreground">
-        {pct}% of total
-      </p>
+      <p className="mt-1 text-muted-foreground">{pct}% of total</p>
       <p className="mt-2 border-t border-border/50 pt-2 text-[11px] leading-snug text-muted-foreground">
         {row.operationalNote}
       </p>
@@ -94,19 +90,41 @@ function LogisticsTooltipBody({
 }
 
 export function MonthlyLogisticsPie({ className }: { className?: string }) {
-  const [monthId, setMonthId] = React.useState<LogisticsMonthId>("january");
+  const {
+    data: logistics,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["monthly-logistics"],
+    queryFn: getMonthlyLogistics,
+    staleTime: 60_000,
+  });
+  const [monthId, setMonthId] = React.useState<string>("");
   const [activeIndex, setActiveIndex] = React.useState<number | undefined>(undefined);
 
-  const entry = monthlyLogisticsByMonth[monthId];
-  const data = React.useMemo(() => toPieData(entry.slices), [entry.slices]);
+  React.useEffect(() => {
+    if (!monthId && logistics?.monthOrder.length) {
+      setMonthId(logistics.monthOrder[0]);
+    }
+  }, [logistics?.monthOrder, monthId]);
+
+  const selectedMonthId = monthId || logistics?.monthOrder[0] || "";
+  const entry = selectedMonthId ? logistics?.byMonth[selectedMonthId] : undefined;
+  const data = React.useMemo(() => toPieData(entry?.slices ?? []), [entry?.slices]);
   const total = React.useMemo(() => data.reduce((s, d) => s + d.value, 0), [data]);
+
+  if (isLoading) return <LoadingBlock className={className} />;
+  if (error) return <ErrorBlock error={error} onRetry={() => refetch()} className={className} />;
+  if (!logistics?.monthOrder.length) return <EmptyBlock className={className} />;
+  if (!entry) return <EmptyBlock className={className} />;
 
   return (
     <div
       className={cn(
         "flex flex-col rounded-md border border-border/60 bg-surface p-5 transition-colors duration-200 sm:p-6",
         "hover:border-border",
-        className
+        className,
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -118,22 +136,29 @@ export function MonthlyLogisticsPie({ className }: { className?: string }) {
             Shipment status by month.
           </p>
         </div>
-        <Select value={monthId} onValueChange={(v) => setMonthId(v as LogisticsMonthId)}>
+        <Select value={selectedMonthId} onValueChange={setMonthId}>
           <SelectTrigger className="w-full shrink-0 sm:w-[160px]" aria-label="Select month">
             <SelectValue placeholder="Month" />
           </SelectTrigger>
           <SelectContent>
-            {logisticsMonthOrder.map((id) => (
+            {logistics.monthOrder.map((id) => (
               <SelectItem key={id} value={id}>
-                {monthlyLogisticsByMonth[id].label}
+                {logistics.byMonth[id]?.label ?? id}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      <div className="relative mt-4 min-h-[220px] flex-1 sm:min-h-[260px]" style={{ overflow: "visible" }}>
-        <ChartContainer config={chartConfig} className="mx-auto aspect-square h-full max-h-[280px] w-full" style={{ overflow: "visible" }}>
+      <div
+        className="relative mt-4 min-h-[220px] flex-1 sm:min-h-[260px]"
+        style={{ overflow: "visible" }}
+      >
+        <ChartContainer
+          config={chartConfig}
+          className="mx-auto aspect-square h-full max-h-[280px] w-full"
+          style={{ overflow: "visible" }}
+        >
           <PieChart key={monthId}>
             <ChartTooltip
               cursor={false}
@@ -182,7 +207,9 @@ export function MonthlyLogisticsPie({ className }: { className?: string }) {
             <p className="text-2xl font-bold tabular-nums tracking-tight text-foreground sm:text-3xl">
               {total.toLocaleString("en-US")}
             </p>
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Shipments</p>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Shipments
+            </p>
           </div>
         </div>
       </div>

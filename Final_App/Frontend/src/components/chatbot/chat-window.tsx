@@ -47,11 +47,18 @@ export function ChatWindow({ embedded = false }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={reset} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" title="New chat">
+          <button
+            onClick={reset}
+            className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            title="New chat"
+          >
             <RotateCcw className="h-3.5 w-3.5" />
           </button>
           {!embedded && (
-            <button onClick={() => setOpen(false)} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+            <button
+              onClick={() => setOpen(false)}
+              className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
               <X className="h-4 w-4" />
             </button>
           )}
@@ -59,7 +66,9 @@ export function ChatWindow({ embedded = false }: Props) {
       </header>
 
       <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4">
-        {messages.map((m) => <ChatMessage key={m.id} msg={m} />)}
+        {messages.map((m) => (
+          <ChatMessage key={m.id} msg={m} />
+        ))}
         {pending && <TypingIndicator />}
       </div>
 

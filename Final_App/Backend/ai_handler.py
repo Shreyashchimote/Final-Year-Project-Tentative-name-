@@ -22,8 +22,8 @@ class AIHandler:
         if not self.api_key:
             print("Warning: Hugging Face API token not found!")
             print("Set HF_API_TOKEN environment variable for real API access.")
-            print("Using mock responses for testing.")
-            self.use_mock = True
+            print("Using fallback responses until the Hugging Face token is configured.")
+            self.use_fallback = True
             self.client = None
             return
         
@@ -40,12 +40,12 @@ class AIHandler:
             self._test_connection()
             
             print(f"Hugging Face Inference API initialized successfully!")
-            self.use_mock = False
+            self.use_fallback = False
             
         except Exception as e:
             print(f"Warning: Failed to initialize Hugging Face API: {str(e)}")
-            print("Using mock responses for testing.")
-            self.use_mock = True
+            print("Using fallback responses until the Hugging Face client is available.")
+            self.use_fallback = True
             self.client = None
     
     def _test_connection(self) -> None:
@@ -94,9 +94,8 @@ class AIHandler:
                 prompt = f"Question: {query}\nAnswer:"
                 confidence = 0.7
             
-            if self.use_mock:
-                # Return mock response if API initialization failed
-                return self._get_mock_response(query, context), confidence
+            if self.use_fallback:
+                return self._get_fallback_response(query, context), confidence
             
             # Call Hugging Face Inference API
             response = self.client.text_generation(
@@ -153,32 +152,32 @@ class AIHandler:
         
         return min(confidence, 1.0)  # Cap at 1.0
     
-    def _get_mock_response(
+    def _get_fallback_response(
         self, 
         query: str, 
         context: Optional[List[Dict[str, Any]]] = None
     ) -> str:
         """
-        Generate a mock response (for testing when API initialization fails)
+        Generate a fallback response when API initialization fails.
         
         Args:
             query: The user's query
             context: Optional context documents
         
         Returns:
-            Mock response text
+            Fallback response text
         """
         if context:
             sources = [doc.get("source", "unknown") for doc in context]
             return (
                 f"Based on the provided context from {', '.join(sources)}, "
                 f"here's an answer to your question: '{query}'. "
-                f"[This is a mock response. The Hugging Face Inference API failed to initialize. "
+                f"[This is a fallback response. The Hugging Face Inference API failed to initialize. "
                 f"Please check your HF_API_TOKEN environment variable.]"
             )
         else:
             return (
                 f"Here's an answer to your question: '{query}'. "
-                f"[This is a mock response. The Hugging Face Inference API failed to initialize. "
+                f"[This is a fallback response. The Hugging Face Inference API failed to initialize. "
                 f"Please check your HF_API_TOKEN environment variable.]"
             )

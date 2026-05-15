@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Activity, Brain, Gauge, TrendingUp } from "lucide-react";
+import type { DemandKpi } from "@/types/api";
 import { cn } from "@/lib/utils";
 
 type StripItem = {
@@ -10,40 +11,26 @@ type StripItem = {
   icon: LucideIcon;
 };
 
-const items: StripItem[] = [
-  {
-    label: "Accuracy",
-    value: "94.1%",
-    trend: "+0.3 pp",
-    trendPositive: true,
-    icon: Gauge,
-  },
-  {
-    label: "Demand spike",
-    value: "+18%",
-    trend: "vs. prior period",
-    trendPositive: true,
-    icon: TrendingUp,
-  },
-  {
-    label: "Inventory risk",
-    value: "Medium",
-    trend: "Stable",
-    icon: Activity,
-  },
-  {
-    label: "AI confidence",
-    value: "High",
-    trend: "Ensemble",
-    trendPositive: true,
-    icon: Brain,
-  },
-];
+const iconMap: Record<NonNullable<DemandKpi["icon"]>, LucideIcon> = {
+  activity: Activity,
+  brain: Brain,
+  gauge: Gauge,
+  trend: TrendingUp,
+};
 
-export function DemandForecastKpiStrip() {
+function toStripItem(item: DemandKpi): StripItem {
+  return {
+    ...item,
+    icon: iconMap[item.icon ?? "gauge"],
+  };
+}
+
+export function DemandForecastKpiStrip({ items }: { items: DemandKpi[] }) {
+  const stripItems = items.map(toStripItem);
+
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-3.5 lg:grid-cols-4">
-      {items.map((item) => (
+      {stripItems.map((item) => (
         <div
           key={item.label}
           className={cn(
@@ -56,14 +43,18 @@ export function DemandForecastKpiStrip() {
             <span
               className={cn(
                 "text-[10px] font-medium tabular-nums text-muted-foreground",
-                item.trendPositive === true && "text-emerald-700 dark:text-emerald-400/90"
+                item.trendPositive === true && "text-emerald-700 dark:text-emerald-400/90",
               )}
             >
               {item.trend}
             </span>
           </div>
-          <p className="mt-2.5 text-lg font-semibold tabular-nums tracking-tight text-foreground">{item.value}</p>
-          <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{item.label}</p>
+          <p className="mt-2.5 text-lg font-semibold tabular-nums tracking-tight text-foreground">
+            {item.value}
+          </p>
+          <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {item.label}
+          </p>
         </div>
       ))}
     </div>

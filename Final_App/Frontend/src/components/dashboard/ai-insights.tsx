@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, Lightbulb } from "lucide-react";
 import type { AIInsight } from "@/types/dashboard";
-import { aiInsights as defaults } from "@/mock/dashboard-data";
+import { getDashboardSummary } from "@/services/dashboard";
+import { EmptyBlock, ErrorBlock, LoadingBlock } from "@/components/common/data-state";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -11,26 +13,19 @@ const impactTone = {
   Low: "bg-muted/80 text-muted-foreground",
 } as const;
 
-function InsightRow({
-  insight,
-  compact,
-}: {
-  insight: AIInsight;
-  compact: boolean;
-}) {
+function InsightRow({ insight, compact }: { insight: AIInsight; compact: boolean }) {
   return (
     <div
-      className={cn(
-        "border-b border-border/50 last:border-0",
-        compact ? "px-5 py-4" : "px-6 py-5"
-      )}
+      className={cn("border-b border-border/50 last:border-0", compact ? "px-5 py-4" : "px-6 py-5")}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <h4 className="min-w-0 flex-1 text-sm font-medium leading-snug text-foreground">{insight.title}</h4>
+        <h4 className="min-w-0 flex-1 text-sm font-medium leading-snug text-foreground">
+          {insight.title}
+        </h4>
         <span
           className={cn(
             "shrink-0 rounded-md px-2 py-0.5 text-xs font-medium",
-            impactTone[insight.impact]
+            impactTone[insight.impact],
           )}
         >
           {insight.impact}
@@ -45,7 +40,7 @@ function InsightRow({
 }
 
 export function AIInsights({
-  insights = defaults,
+  insights: overrideInsights,
   variant = "default",
   maxPreview = 3,
 }: {
@@ -54,10 +49,21 @@ export function AIInsights({
   maxPreview?: number;
 }) {
   const [open, setOpen] = useState(false);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["dashboard-summary"],
+    queryFn: getDashboardSummary,
+    enabled: !overrideInsights,
+    staleTime: 60_000,
+  });
+  const insights = overrideInsights ?? data?.aiInsights ?? [];
   const compact = variant === "compact";
   const preview = insights.slice(0, maxPreview);
   const extra = insights.slice(maxPreview);
   const hasExtra = compact && extra.length > 0;
+
+  if (!overrideInsights && isLoading) return <LoadingBlock />;
+  if (!overrideInsights && error) return <ErrorBlock error={error} onRetry={() => refetch()} />;
+  if (!insights.length) return <EmptyBlock label="No insights returned" />;
 
   return (
     <div className="rounded-md border border-border/70 bg-surface">

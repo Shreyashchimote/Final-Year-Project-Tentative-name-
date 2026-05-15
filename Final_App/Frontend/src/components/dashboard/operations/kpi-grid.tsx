@@ -7,7 +7,7 @@ export function KpiGrid({ metrics, className }: { metrics: KpiMetric[]; classNam
     <div
       className={cn(
         "grid h-full min-h-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 [&>*]:min-h-0",
-        className
+        className,
       )}
     >
       {metrics.map((m) => (

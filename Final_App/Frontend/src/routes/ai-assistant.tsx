@@ -8,7 +8,10 @@ export const Route = createFileRoute("/ai-assistant")({
   head: () => ({
     meta: [
       { title: "AI Assistant · Nexus SCM" },
-      { name: "description", content: "AI workspace for analytics, recommendations, and natural-language control." },
+      {
+        name: "description",
+        content: "AI workspace for analytics, recommendations, and natural-language control.",
+      },
     ],
   }),
   component: AssistantPage,
@@ -42,7 +45,9 @@ function AssistantPage() {
       <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
         <div className="space-y-4">
           <div className="rounded-md border border-border bg-surface p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Capabilities</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+              Capabilities
+            </p>
             <div className="mt-3 space-y-3">
               {capabilities.map((c) => (
                 <div key={c.title} className="flex items-start gap-3">
@@ -59,7 +64,9 @@ function AssistantPage() {
           </div>
 
           <div className="rounded-md border border-border bg-surface p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Suggested prompts</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+              Suggested prompts
+            </p>
             <div className="mt-3 space-y-2">
               {prompts.map((p) => (
                 <button

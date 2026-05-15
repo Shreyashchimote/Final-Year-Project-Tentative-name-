@@ -1,326 +1,342 @@
-# AI RAG API
+# Backend Service Documentation
 
-A simple FastAPI application for AI-powered responses with Retrieval-Augmented Generation (RAG) capabilities.
+This backend powers the RIMS dashboard with live Databricks Gold-layer data. It exposes FastAPI JSON endpoints for the frontend, optional server-sent event streams for live refresh flows, and optional AI/RAG endpoints for document questions.
 
-## Features
+## Service Overview
 
-- **FastAPI** - Modern, fast web framework
-- **RAG (Retrieval-Augmented Generation)** - Retrieve relevant documents and generate contextual responses
-- **Vector Store** - Chroma database for document embeddings
-- **Hugging Face Inference API** - Use models via API without downloading (no model storage needed)
-- **Document Management** - Upload, index, and manage documents
-- **No Local Model Storage** - All processing on Hugging Face servers
-- **DeepSeek V4 Pro** - State-of-the-art model for intelligent responses
+The backend has three responsibilities:
 
-## Project Structure
+- Connect securely to Databricks SQL using environment variables.
+- Transform Gold table rows into frontend-ready dashboard contracts.
+- Serve analytics, streaming, health, document, and AI routes from one FastAPI app.
 
-```
-.
-├── main.py              # FastAPI application and routes
-├── rag_handler.py       # RAG and vector store logic
-├── ai_handler.py        # AI response generation
-├── requirements.txt     # Python dependencies
-├── .env.example         # Environment configuration template
-└── README.md            # This file
-```
+The frontend should never call Databricks directly. It calls this backend through `VITE_API_BASE_URL`, and the backend owns credentials, SQL queries, response shaping, and error handling.
 
-## Prerequisites
+## Runtime
 
-- Python 3.8+
-- pip (Python package manager)
-
-## Installation
-
-### 1. Clone or navigate to the project directory
+Use the repository startup script from the project root:
 
 ```bash
-cd Utkarsh
+bash Final_App/start.sh
 ```
 
-### 2. Create a virtual environment (recommended)
+The script creates the backend virtual environment when needed, installs dependencies, starts FastAPI on port `8000`, verifies Databricks connectivity, then starts the frontend on port `8082`.
+
+Direct backend startup is also supported:
 
 ```bash
-python -m venv venv
+cd Final_App/Backend
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-### 3. Activate virtual environment
+Interactive API docs are available while the server is running:
 
-**On macOS/Linux:**
-```bash
-source venv/bin/activate
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- ReDoc: `http://127.0.0.1:8000/redoc`
+
+## Environment Configuration
+
+Secrets live in `Final_App/Backend/.env`. Keep this file local and do not commit real tokens.
+
+Required Databricks values:
+
+```env
+DATABRICKS_SERVER_HOSTNAME=adb-xxxxxxxxxxxxxxxx.x.azuredatabricks.net
+DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/your_warehouse_id
+DATABRICKS_ACCESS_TOKEN=dapi_your_databricks_pat_here
+DATABRICKS_CATALOG=main
+DATABRICKS_SCHEMA=default
+DATABRICKS_CACHE_TTL_SECONDS=300
 ```
 
-**On Windows:**
-```bash
-venv\Scripts\activate
+`DATABRICKS_WAREHOUSE_ID` can be used instead of `DATABRICKS_HTTP_PATH`; the client converts it into `/sql/1.0/warehouses/<warehouse_id>`.
+
+Optional table overrides:
+
+```env
+DATABRICKS_GOLD_SALES_TABLE=gold_sales_ml_clean
+DATABRICKS_GOLD_INVENTORY_TABLE=gold_inventory_features
+DATABRICKS_GOLD_DELIVERY_TABLE=gold_delivery_features
 ```
 
-### 4. Install dependencies
+Optional AI/RAG values:
 
-```bash
-pip install -r requirements.txt
-```
-
-### 5. Configure Hugging Face API Token
-
-Copy the example environment file and set your Hugging Face API token:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and add your Hugging Face API token:
-```
-HF_API_TOKEN=hf_your_actual_token_here
-HF_MODEL_ID=deepseek-ai/DeepSeek-V4-Pro
-```
-
-**To get your Hugging Face API token:**
-1. Go to [Hugging Face Settings](https://huggingface.co/settings/tokens)
-2. Create a new token with "read" access
-3. Copy and paste it in `.env`
-
-## Running the Application
-
-### Start the server
-
-```bash
-python main.py
-```
-
-The API will be available at `http://localhost:8000`
-
-Expected output:
-```
-Initializing Hugging Face Inference API for model: deepseek-ai/DeepSeek-V4-Pro
-✓ Connection to Hugging Face Inference API successful
-Hugging Face Inference API initialized successfully!
-INFO:     Uvicorn running on http://0.0.0.0:8000
-```
-
-### Access the interactive documentation
-
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-## API Endpoints
-
-### 1. Health Check
-
-```bash
-GET /
-```
-
-**Response:**
-```json
-{
-  "message": "AI RAG API is running",
-  "status": "healthy",
-  "version": "1.0.0"
-}
-```
-
-### 2. Query with AI (with optional RAG)
-
-```bash
-POST /query
-```
-
-**Request Body:**
-```json
-{
-  "query": "What is machine learning?",
-  "use_rag": true,
-  "top_k": 3
-}
-```
-
-**Response:**
-```json
-{
-  "response": "Machine learning is a subset of artificial intelligence...",
-  "sources": ["document1.txt", "document2.txt"],
-  "confidence": 0.85
-}
-```
-
-### 3. Upload Documents
-
-```bash
-POST /upload-documents
-```
-
-Upload one or more text/markdown files to index them for RAG:
-
-```bash
-curl -F "files=@document1.txt" -F "files=@document2.txt" http://localhost:8000/upload-documents
-```
-
-**Response:**
-```json
-{
-  "message": "Documents uploaded and indexed successfully",
-  "documents_count": 2
-}
-```
-
-### 4. Get Document Status
-
-```bash
-GET /documents-status
-```
-
-**Response:**
-```json
-{
-  "status": "active",
-  "documents_count": 5,
-  "collection_name": "documents",
-  "embedding_model": "all-MiniLM-L6-v2"
-}
-```
-
-### 5. Clear Vector Store
-
-```bash
-DELETE /clear-documents
-```
-
-**Response:**
-```json
-{
-  "message": "Vector store cleared successfully"
-}
-```
-
-## Usage Examples
-
-### Example 1: Query without RAG
-
-```bash
-curl -X POST "http://localhost:8000/query" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "Explain quantum computing",
-    "use_rag": false
-  }'
-```
-
-### Example 2: Upload documents and query with RAG
-
-1. **Upload documents:**
-```bash
-curl -F "files=@my_document.txt" http://localhost:8000/upload-documents
-```
-
-2. **Query with RAG:**
-```bash
-curl -X POST "http://localhost:8000/query" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "What is discussed in the documents?",
-    "use_rag": true,
-    "top_k": 5
-  }'
-```
-
-## Configuration
-
-### Environment Variables
-
-Edit `.env` file to configure:
-
-- `OPENAI_API_KEY` - Your OpenAI API key (required for real responses)
-- `HOST` - API host (default: 0.0.0.0)
-- `PORT` - API port (default: 8000)
-- `RELOAD` - Auto-reload on code changes (default: True)
-- `PERSIST_DIRECTORY` - Vector store location (default: ./chroma_db)
-
-## Vector Store
-
-The application uses **Chroma** for vector storage with:
-- **Embedding Model**: all-MiniLM-L6-v2 (lightweight, efficient)
-- **Persistence**: Automatically saves to `./chroma_db` directory
-- **Similarity Search**: Uses cosine similarity for document retrieval
-
-## Dependencies
-
-- **fastapi** - Web framework
-- **uvicorn** - ASGI server
-- **pydantic** - Data validation
-- **langchain** - LLM framework
-- **langchain-huggingface** - Hugging Face integration
-- **huggingface-hub** - Hugging Face Inference API client
-- **chromadb** - Vector database
-- **sentence-transformers** - Embedding generation
-- **python-dotenv** - Environment configuration
-- **requests** - HTTP client
-
-## Notes
-
-- **API Key Required**: Requires Hugging Face API token (free account available)
-- **No Model Download**: All processing happens on Hugging Face servers
-- **No Storage**: No disk space needed for models
-- **Fast Startup**: API starts immediately without downloading models
-- **No GPU Needed**: No local GPU required (Hugging Face handles it)
-- **Performance**: Queries are processed on Hugging Face infrastructure
-- **File Formats**: Currently supports `.txt` and `.md` files (extend `main.py` for PDF support)
-
-## Extending the Application
-
-### Add PDF Support
-
-Install `pypdf`:
-```bash
-pip install pypdf
-```
-
-Modify the `upload_documents` function in `main.py` to handle PDF files.
-
-### Use Different Hugging Face Models
-
-Edit `.env` to change the model ID:
-
-```
+```env
 HF_API_TOKEN=hf_your_token_here
-HF_MODEL_ID=meta-llama/Llama-2-7b-hf
+HF_MODEL_ID=deepseek-ai/DeepSeek-V4-Pro
+FRONTEND_ORIGINS=http://localhost:8082,http://127.0.0.1:8082
 ```
 
-Popular models available via Hugging Face Inference API:
-- **Fast**: `distilgpt2`, `gpt2`
-- **Balanced**: `EleutherAI/gpt-neo-2.7B`, `EleutherAI/gpt-j-6B`
-- **High Quality**: `deepseek-ai/DeepSeek-V4-Pro`, `meta-llama/Llama-2-7b-hf`
+## Component Map
 
-### Use Different Embedding Models
+### `main.py`
 
-In `rag_handler.py`, change:
-```python
-self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+FastAPI application entry point.
+
+Responsibilities:
+
+- Loads `.env` values using `python-dotenv`.
+- Configures CORS from `FRONTEND_ORIGINS`.
+- Loads `AIHandler` and `RAGHandler` only when AI or document routes need them.
+- Registers the streaming router under `/api/stream`.
+- Registers the Databricks analytics router.
+- Exposes health, AI query, document upload, document status, and document clearing routes.
+
+Routes:
+
+- `GET /` returns API health and points to the Databricks status endpoint.
+- `POST /query` answers a question with optional RAG context.
+- `POST /upload-documents` indexes `.txt` and `.md` files into Chroma.
+- `GET /documents-status` returns vector-store state.
+- `DELETE /clear-documents` clears the vector-store collection.
+
+### `databricks_client.py`
+
+Databricks SQL connection and query utility.
+
+Responsibilities:
+
+- Reads Databricks host, warehouse path, token, catalog, schema, and cache TTL.
+- Normalizes hostnames by removing protocol prefixes.
+- Builds the HTTP path from `DATABRICKS_WAREHOUSE_ID` when needed.
+- Validates required settings and raises `DatabricksConfigError` for missing config.
+- Safely qualifies table names as `catalog.schema.table`.
+- Executes SQL through `databricks-sql-connector`.
+- Converts Databricks values such as `Decimal`, `date`, and `datetime` into JSON-safe values.
+- Caches query results in memory by cache key for the configured TTL.
+
+Error types:
+
+- `DatabricksConfigError` means local configuration is incomplete or invalid.
+- `DatabricksQueryError` means Databricks rejected or failed a query.
+
+### `databricks_analytics.py`
+
+Analytics service layer and API router.
+
+Responsibilities:
+
+- Defines the `/api/*` analytics endpoints used by the frontend.
+- Builds SQL against the configured Gold tables.
+- Converts raw SQL aggregates into UI-friendly objects.
+- Runs Databricks work in a threadpool so the async FastAPI event loop stays responsive.
+- Converts Databricks config failures to HTTP `503`.
+- Converts Databricks query failures to HTTP `502`.
+
+Default Gold tables:
+
+- Sales: `main.default.gold_sales_ml_clean`
+- Inventory: `main.default.gold_inventory_features`
+- Delivery: `main.default.gold_delivery_features`
+
+Analytics builders:
+
+- `build_dashboard_summary()` combines KPI cards, activity feed, AI-style insights, autonomous decisions, warehouse utilization, and shipment stats.
+- `build_monthly_logistics()` creates month-by-month delivered, in-transit, delayed, at-risk, and returned slices.
+- `build_demand_intelligence()` creates forecast series, inventory history, accuracy KPIs, model confidence, and scenarios.
+- `build_inventory()` returns inventory rows and stock status history.
+- `build_shipments()` returns the latest shipment rows, shipment stats, and daily shipment volume.
+- `build_regional_performance()` returns risk matrix, risk trend, regional performance, and summary counts.
+- `build_revenue_trends()` returns monthly revenue, profit, and order volume.
+
+### `sendData.py`
+
+Server-sent event streaming layer.
+
+Responsibilities:
+
+- Reuses the Databricks analytics builders instead of keeping mock streaming data.
+- Emits JSON payloads in SSE format.
+- Refreshes each stream every 30 seconds by default.
+- Sends an error payload in the stream if a builder fails.
+
+Streaming routes:
+
+- `GET /api/stream/dashboard`
+- `GET /api/stream/inventory`
+- `GET /api/stream/forecasting`
+- `GET /api/stream/shipments`
+- `GET /api/stream/risk`
+
+### `ai_handler.py`
+
+Optional Hugging Face assistant layer.
+
+Responsibilities:
+
+- Initializes a Hugging Face `InferenceClient` when `HF_API_TOKEN` is present.
+- Generates responses for `/query`.
+- Formats RAG context into the prompt when document retrieval is enabled.
+- Calculates a simple confidence score from retrieval similarity.
+- Falls back to a clear local response when the Hugging Face token or client is unavailable.
+- Loads lazily so dashboard routes can start without waiting on Hugging Face.
+
+This component is optional for dashboard operation. Databricks analytics endpoints do not depend on Hugging Face.
+
+### `rag_handler.py`
+
+Optional document retrieval layer.
+
+Responsibilities:
+
+- Uses Chroma as a persistent vector store.
+- Uses `all-MiniLM-L6-v2` sentence embeddings.
+- Adds uploaded document chunks to the `documents` collection.
+- Retrieves top-k related documents for `/query`.
+- Reports vector-store status and clears stored documents when requested.
+- Loads lazily so Databricks dashboard routes can start even when the embedding model is not available locally.
+
+Generated vector data lives in `Final_App/Backend/chroma_db` and should not be committed.
+
+### `requirements.txt`
+
+Production dependency list for the backend.
+
+Key packages:
+
+- `fastapi` and `uvicorn` for the API server.
+- `python-dotenv` for environment loading.
+- `databricks-sql-connector` for Databricks SQL warehouse access.
+- `chromadb` and `sentence-transformers` for RAG document retrieval.
+- `huggingface-hub` for optional AI responses.
+
+## Analytics API Reference
+
+### `GET /api/databricks-status`
+
+Purpose: Lightweight Databricks health check.
+
+Returns:
+
+```json
+{
+  "status": "connected"
+}
 ```
 
-Other options: `all-mpnet-base-v2` (larger but more accurate), `paraphrase-MiniLM-L6-v2`
+### `GET /api/dashboard-summary`
+
+Purpose: Main dashboard landing payload.
+
+Returns:
+
+- `kpiMetrics`: headline KPI cards.
+- `activityFeed`: latest operational signals.
+- `aiInsights`: derived risk and opportunity summaries.
+- `autonomousDecisions`: replenishment-style recommendations.
+- `warehouseUtilization`: store or warehouse utilization proxy.
+- `shipmentStats`: shipment totals and exception counts.
+
+### `GET /api/monthly-logistics`
+
+Purpose: Logistics performance by month.
+
+Returns:
+
+- `monthOrder`: ordered month ids.
+- `byMonth`: per-month slices for delivered, in transit, delayed, at risk, and returned.
+
+### `GET /api/demand-intelligence`
+
+Purpose: Forecasting and inventory intelligence page.
+
+Returns:
+
+- `forecastSeries`: actual, forecast, upper, and lower forecast values.
+- `inventoryHistory`: monthly healthy, low, critical, and overstock counts.
+- `accuracy`: forecast accuracy percentage.
+- `kpiStrip`: compact KPI cards.
+- `modelConfidence`: model/signal confidence cards.
+- `scenarios`: baseline, high-demand, and inventory-stress scenarios.
+
+### `GET /api/regional-performance`
+
+Purpose: Risk and regional performance page.
+
+Returns:
+
+- `riskMatrix`: probability, impact, and exposure by risk category.
+- `riskTrend`: weekly delivery-risk trend.
+- `regions`: region-level orders, on-time delivery, revenue, and profit.
+- `summary`: high exposure, network risk, anomalies, resolved, and reviewing counts.
+
+### `GET /api/revenue-trends`
+
+Purpose: Revenue trend chart data.
+
+Returns:
+
+- `trends`: monthly revenue, profit, and order count.
+
+### `GET /api/inventory`
+
+Purpose: Inventory table and inventory health history.
+
+Returns:
+
+- `items`: latest product-store stock records with status and days of cover.
+- `history`: monthly inventory status counts.
+
+### `GET /api/shipments`
+
+Purpose: Shipment tracking page.
+
+Returns:
+
+- `shipments`: latest 100 shipment rows.
+- `stats`: shipment, on-time, delayed, and at-risk totals.
+- `volume`: recent daily shipment volume.
+
+## Data Contract Notes
+
+The backend returns camelCase fields because the frontend components consume camelCase props. SQL aliases may use snake_case internally, but builders translate them before returning JSON.
+
+Stock status is derived in the backend:
+
+- `Critical`: stock is below 80 percent of reorder point.
+- `Low`: stock is below reorder point.
+- `Overstock`: stock is above twice reorder point.
+- `Healthy`: stock is inside the expected range.
+
+Risk and confidence values are normalized to a `0` to `100` range before being returned.
+
+## Error Behavior
+
+Databricks endpoints use these status codes:
+
+- `200`: request succeeded.
+- `502`: Databricks query failed.
+- `503`: Databricks configuration is missing or invalid.
+
+Document and AI endpoints return `500` for unexpected handler failures and `400` when document upload receives no supported files.
+
+## Security Notes
+
+- Keep `.env` local and out of Git.
+- Do not place Databricks tokens in frontend files.
+- Rotate Databricks personal access tokens if they are exposed.
+- Prefer a scoped Databricks token or service principal for shared deployments.
+- Keep CORS restricted through `FRONTEND_ORIGINS` when deploying outside local development.
 
 ## Troubleshooting
 
-**Issue**: `ModuleNotFoundError: No module named 'huggingface_hub'`
-- **Solution**: Install dependencies: `pip install -r requirements.txt`
+If the app says Databricks is not connected:
 
-**Issue**: `ValueError: Hugging Face API token not found`
-- **Solution**: Set `HF_API_TOKEN` in `.env` file. Get token from https://huggingface.co/settings/tokens
+- Check `DATABRICKS_SERVER_HOSTNAME`.
+- Check `DATABRICKS_HTTP_PATH` or `DATABRICKS_WAREHOUSE_ID`.
+- Check that `DATABRICKS_ACCESS_TOKEN` is active.
+- Confirm the SQL warehouse is running.
+- Visit `http://127.0.0.1:8000/api/databricks-status`.
 
-**Issue**: `PermissionError` when accessing model
-- **Solution**: Model may require acceptance of terms. Visit https://huggingface.co/ and accept model terms
+If a dashboard route returns a query error:
 
-**Issue**: Vector store not persisting
-- **Solution**: Ensure `./chroma_db` directory exists and has write permissions
+- Confirm the configured catalog and schema exist.
+- Confirm the Gold tables are present.
+- Confirm table overrides match the actual table names.
+- Check whether required columns exist in the Gold tables.
 
-**Issue**: API connection timeout
-- **Solution**: Check your internet connection and Hugging Face API status
+If the frontend loads but data is empty:
 
-## License
-
-MIT License
-
-## Support
-
-For issues or questions, please refer to the project documentation or contact the development team.
+- Confirm the frontend is using `VITE_API_BASE_URL=http://127.0.0.1:8000`.
+- Open `http://127.0.0.1:8000/api/dashboard-summary` and check the raw JSON.
+- Restart with `bash Final_App/start.sh` so both services use the same environment.

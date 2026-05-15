@@ -1,4 +1,16 @@
-import { riskMatrix, riskTrend } from "@/mock/risk-data";
+import { fetchJson } from "@/services/api";
+import type { RegionalPerformance } from "@/types/api";
 
-export async function getRiskMatrix() { return Promise.resolve(riskMatrix); }
-export async function getRiskTrend() { return Promise.resolve(riskTrend); }
+export function getRegionalPerformance(): Promise<RegionalPerformance> {
+  return fetchJson<RegionalPerformance>("/api/regional-performance");
+}
+
+export async function getRiskMatrix() {
+  const data = await getRegionalPerformance();
+  return data.riskMatrix;
+}
+
+export async function getRiskTrend() {
+  const data = await getRegionalPerformance();
+  return data.riskTrend;
+}

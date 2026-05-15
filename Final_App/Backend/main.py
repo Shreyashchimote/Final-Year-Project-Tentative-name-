@@ -6,8 +6,8 @@ import os
 from dotenv import load_dotenv
 from rag_handler import RAGHandler
 from ai_handler import AIHandler
-from mock_data import seed_mock_data
 from sendData import stream_router
+from databricks_analytics import analytics_router
 
 load_dotenv()
 
@@ -37,10 +37,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize handlers
-rag_handler = RAGHandler()
+# Initialize handlers. RAG is loaded lazily because the dashboard does not need
+# embeddings, and first-time model loading may require network access.
+rag_handler: RAGHandler | None = None
 hf_model_id = os.getenv("HF_MODEL_ID", "deepseek-ai/DeepSeek-V4-Pro")
-ai_handler = AIHandler(model=hf_model_id)  # Will use mock mode if API fails
+ai_handler: AIHandler | None = None
+
+
+def get_rag_handler() -> RAGHandler:
+    global rag_handler
+    if rag_handler is None:
+        rag_handler = RAGHandler()
+    return rag_handler
+
+
+def get_ai_handler() -> AIHandler:
+    global ai_handler
+    if ai_handler is None:
+        ai_handler = AIHandler(model=hf_model_id)  # Uses fallback if API setup fails.
+    return ai_handler
 
 # Models
 class QueryRequest(BaseModel):
@@ -57,45 +72,6 @@ class DocumentUploadResponse(BaseModel):
     message: str
     documents_count: int
 
-# ---------------------------------------------------------------------------
-# Mock-connection helpers
-# ---------------------------------------------------------------------------
-def is_mock_connection_query(query: str) -> bool:
-    """Return True if the prompt contains any mock-trigger word."""
-    lowered = query.lower()
-    trigger_words = ("mock", "connection", "test", "backend")
-    return any(word in lowered for word in trigger_words)
-
-
-def build_mock_connection_response(query: str) -> QueryResponse:
-    """Return a deterministic mock response for connection verification."""
-    return QueryResponse(
-        response=(
-            "MOCK_BACKEND_CONNECTION_OK: FastAPI received your frontend request. "
-            f"Echoed query: '{query}'. Dashboard sample: 4 late shipments, "
-            "91% forecast confidence, 2 critical inventory alerts."
-        ),
-        sources=[
-            "mock://backend/connection-check",
-            "mock://shipments/late-count=4",
-            "mock://inventory/critical-alerts=2",
-        ],
-        confidence=0.99,
-    )
-
-
-# ---------------------------------------------------------------------------
-# Startup — seed mock supply-chain documents into the RAG store
-# ---------------------------------------------------------------------------
-@app.on_event("startup")
-async def startup_seed_mock_data():
-    """Load mock documents into ChromaDB on first boot (idempotent)."""
-    try:
-        seed_mock_data(rag_handler)
-    except Exception as exc:
-        print(f"[startup] Could not seed mock data: {exc}")
-
-
 # Routes
 @app.get("/", tags=["Health"])
 async def root():
@@ -104,10 +80,11 @@ async def root():
         "message": "AI RAG API is running",
         "status": "healthy",
         "version": "1.0.0",
-        "mock_trigger": "POST /query with a prompt containing mock, connection, test, or backend",
+        "databricks_status_endpoint": "GET /api/databricks-status",
     }
 
 app.include_router(stream_router, prefix="/api/stream", tags=["Streaming"])
+app.include_router(analytics_router, tags=["Databricks Analytics"])
 
 @app.post("/query", response_model=QueryResponse, tags=["AI Queries"])
 async def query(request: QueryRequest):
@@ -119,16 +96,14 @@ async def query(request: QueryRequest):
     - **top_k**: Number of top documents to retrieve (default: 3)
     """
     try:
-        # --- mock-connection short-circuit ---
-        if is_mock_connection_query(request.query):
-            return build_mock_connection_response(request.query)
-
         if request.use_rag:
+            handler = get_rag_handler()
             # Retrieve relevant documents from vector store
-            relevant_docs = rag_handler.retrieve(request.query, top_k=request.top_k)
+            relevant_docs = handler.retrieve(request.query, top_k=request.top_k)
+            assistant = get_ai_handler()
             
             # Generate response using retrieved context
-            response, confidence = ai_handler.generate_response(
+            response, confidence = assistant.generate_response(
                 query=request.query,
                 context=relevant_docs
             )
@@ -142,8 +117,9 @@ async def query(request: QueryRequest):
                 confidence=confidence
             )
         else:
+            assistant = get_ai_handler()
             # Generate response without RAG
-            response, confidence = ai_handler.generate_response(query=request.query)
+            response, confidence = assistant.generate_response(query=request.query)
             
             return QueryResponse(
                 response=response,
@@ -176,7 +152,7 @@ async def upload_documents(files: List[UploadFile] = File(...)):
             raise HTTPException(status_code=400, detail="No valid documents provided")
         
         # Add documents to vector store
-        count = rag_handler.add_documents(documents)
+        count = get_rag_handler().add_documents(documents)
         
         return DocumentUploadResponse(
             message="Documents uploaded and indexed successfully",
@@ -189,7 +165,7 @@ async def upload_documents(files: List[UploadFile] = File(...)):
 async def clear_documents():
     """Clear all documents from the vector store"""
     try:
-        rag_handler.clear()
+        get_rag_handler().clear()
         return {"message": "Vector store cleared successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -198,11 +174,16 @@ async def clear_documents():
 async def get_documents_status():
     """Get the status of stored documents"""
     try:
-        status = rag_handler.get_status()
+        status = get_rag_handler().get_status()
         return status
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run(
+        app,
+        host=os.getenv("HOST", "127.0.0.1"),
+        port=int(os.getenv("PORT", "8000")),
+        reload=False,
+    )

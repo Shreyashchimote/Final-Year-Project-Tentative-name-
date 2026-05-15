@@ -19,7 +19,7 @@ export function KpiCard({ metric }: { metric: KpiMetric }) {
         <span
           className={cn(
             "inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium",
-            tone
+            tone,
           )}
         >
           <Icon className="h-3 w-3" />
@@ -27,7 +27,9 @@ export function KpiCard({ metric }: { metric: KpiMetric }) {
         </span>
       </div>
       <div className="mt-auto pt-4">
-        <p className="text-3xl font-bold tabular-nums tracking-tight text-foreground">{metric.value}</p>
+        <p className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
+          {metric.value}
+        </p>
         {metric.hint && <p className="mt-1 text-sm text-muted-foreground">{metric.hint}</p>}
       </div>
     </div>

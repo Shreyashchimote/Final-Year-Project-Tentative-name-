@@ -1,6 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import type { ShipmentRecord } from "@/types/prediction";
-import { shipments as initialShipments } from "@/mock/shipment-data";
-import { useContinuousData } from "@/hooks/useContinuousData";
+import { getShipments } from "@/services/shipments";
+import { EmptyBlock, ErrorBlock, LoadingBlock } from "@/components/common/data-state";
 import { cn } from "@/lib/utils";
 import { Truck } from "lucide-react";
 
@@ -18,8 +19,22 @@ export function ShipmentTable({
   data?: ShipmentRecord[];
   title?: string;
 }) {
-  const streamData = useContinuousData("/api/stream/shipments", initialShipments);
-  const data = overrideData ?? streamData;
+  const {
+    data: fetchedData,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["shipments"],
+    queryFn: getShipments,
+    enabled: !overrideData,
+    staleTime: 60_000,
+  });
+  const data = overrideData ?? fetchedData ?? [];
+
+  if (!overrideData && isLoading) return <LoadingBlock />;
+  if (!overrideData && error) return <ErrorBlock error={error} onRetry={() => refetch()} />;
+  if (!data.length) return <EmptyBlock label="No shipments returned" />;
 
   return (
     <div className="overflow-hidden rounded-md border border-border/70 bg-surface">
@@ -57,7 +72,7 @@ export function ShipmentTable({
                   <span
                     className={cn(
                       "inline-flex rounded-md border border-transparent px-2 py-0.5 text-xs font-medium",
-                      statusTone[s.status]
+                      statusTone[s.status],
                     )}
                   >
                     {s.status}
@@ -74,7 +89,7 @@ export function ShipmentTable({
                             ? "bg-destructive"
                             : s.status === "Delayed"
                               ? "bg-warning"
-                              : "bg-primary"
+                              : "bg-primary",
                         )}
                         style={{ width: `${s.progress}%` }}
                       />
@@ -92,7 +107,7 @@ export function ShipmentTable({
                         ? "text-destructive"
                         : s.riskScore > 30
                           ? "text-warning-foreground"
-                          : "text-emerald-700 dark:text-emerald-400"
+                          : "text-emerald-700 dark:text-emerald-400",
                     )}
                   >
                     {s.riskScore}

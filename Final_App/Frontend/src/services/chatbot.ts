@@ -11,47 +11,6 @@ interface QueryResponse {
 }
 
 // ---------------------------------------------------------------------------
-// Offline / fallback canned responses
-// ---------------------------------------------------------------------------
-const CANNED: Record<string, ChatMessage["insight"]> = {
-  forecast: {
-    title: "Forecast outlook — next 14 days",
-    points: [
-      "Demand projected +12.4% across NA-Central, driven by SKU-330 family.",
-      "EU-West stable; small downward drift on SKU-441 (-3%).",
-      "Recommend pre-positioning 2 truckloads to Dallas DC by Thursday.",
-    ],
-    confidence: 91,
-  },
-  risk: {
-    title: "Top supply chain risks right now",
-    points: [
-      "Supplier ACME-2241 — lead time variance > 3σ (HIGH).",
-      "Port congestion at Long Beach +18% week-over-week.",
-      "2 shipments tracking >24h late on Lane LAX→DFW.",
-    ],
-    confidence: 86,
-  },
-  inventory: {
-    title: "Inventory health summary",
-    points: [
-      "2 SKUs in Critical state — auto-replenishment triggered.",
-      "12 SKUs overstocked in EU — $214K working capital opportunity.",
-      "Average days-of-cover steady at 21d.",
-    ],
-    confidence: 88,
-  },
-};
-
-function pickFallbackInsight(prompt: string): ChatMessage["insight"] {
-  const lower = prompt.toLowerCase();
-  if (lower.includes("risk") || lower.includes("supplier")) return CANNED.risk;
-  if (lower.includes("inventory") || lower.includes("stock"))
-    return CANNED.inventory;
-  return CANNED.forecast;
-}
-
-// ---------------------------------------------------------------------------
 // Public API — signature unchanged so the store needs zero changes
 // ---------------------------------------------------------------------------
 export async function askAssistant(prompt: string): Promise<ChatMessage> {
@@ -78,16 +37,13 @@ export async function askAssistant(prompt: string): Promise<ChatMessage> {
           }
         : undefined,
     };
-  } catch {
-    // Fallback to canned data when the backend is unreachable
-    await new Promise((r) => setTimeout(r, 700));
-
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "The backend request failed.";
     return {
       id: crypto.randomUUID(),
       role: "assistant",
       createdAt: new Date().toISOString(),
-      content: `Here's what I'm seeing across the network based on your query: "${prompt}".`,
-      insight: pickFallbackInsight(prompt),
+      content: `I couldn't reach the live backend for "${prompt}". ${message}`,
     };
   }
 }

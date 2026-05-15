@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { KpiGrid } from "@/components/dashboard/operations/kpi-grid";
@@ -8,23 +9,30 @@ import { ActivityPanel } from "@/components/dashboard/activity-panel";
 import { ShipmentTable } from "@/components/dashboard/shipment-table";
 import { AutonomousDecisions } from "@/components/dashboard/autonomous-decisions";
 import { ForecastChart } from "@/components/charts/forecast-chart";
-import { aiInsightsExtended, kpiMetrics as initialKpiMetrics } from "@/mock/dashboard-data";
-import { useContinuousData } from "@/hooks/useContinuousData";
+import { getDashboardSummary } from "@/services/dashboard";
+import { EmptyBlock, ErrorBlock, LoadingBlock } from "@/components/common/data-state";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Operations Overview · Nexus SCM" },
-      { name: "description", content: "Live overview of shipments, demand, and autonomous decisions." },
+      {
+        name: "description",
+        content: "Live overview of shipments, demand, and autonomous decisions.",
+      },
     ],
   }),
   component: Overview,
 });
 
 function Overview() {
-  const streamData = useContinuousData("/api/stream/dashboard", { kpiMetrics: initialKpiMetrics, activityFeed: [] });
-  const overviewKpiMetrics = streamData.kpiMetrics.filter((m) =>
-    ["k1", "k2", "k4", "k6"].includes(m.id)
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["dashboard-summary"],
+    queryFn: getDashboardSummary,
+    staleTime: 60_000,
+  });
+  const overviewKpiMetrics = (data?.kpiMetrics ?? []).filter((m) =>
+    ["k1", "k2", "k4", "k6"].includes(m.id),
   );
 
   return (
@@ -50,35 +58,52 @@ function Overview() {
         >
           Snapshot
         </h2>
-        <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-2">
-          <div className="min-w-0">
-            <KpiGrid metrics={overviewKpiMetrics} className="h-full w-full" />
+        {isLoading ? (
+          <LoadingBlock />
+        ) : error ? (
+          <ErrorBlock error={error} onRetry={() => refetch()} />
+        ) : !overviewKpiMetrics.length ? (
+          <EmptyBlock />
+        ) : (
+          <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-2">
+            <div className="min-w-0">
+              <KpiGrid metrics={overviewKpiMetrics} className="h-full w-full" />
+            </div>
+            <div className="min-w-0">
+              <MonthlyLogisticsPie className="h-full w-full" />
+            </div>
           </div>
-          <div className="min-w-0">
-            <MonthlyLogisticsPie className="h-full w-full" />
-          </div>
-        </div>
+        )}
       </section>
 
       <section className="space-y-3" aria-labelledby="overview-forecast-heading">
-        <h2 id="overview-forecast-heading" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h2
+          id="overview-forecast-heading"
+          className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        >
           Forecast
         </h2>
         <ForecastChart height={400} />
       </section>
 
       <section className="space-y-3" aria-labelledby="overview-insights-heading">
-        <h2 id="overview-insights-heading" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h2
+          id="overview-insights-heading"
+          className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        >
           Insights & activity
         </h2>
         <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
-          <AIInsights variant="compact" insights={aiInsightsExtended} maxPreview={3} />
-          <ActivityPanel variant="compact" previewCount={5} />
+          <AIInsights variant="compact" insights={data?.aiInsights} maxPreview={3} />
+          <ActivityPanel variant="compact" events={data?.activityFeed} previewCount={5} />
         </div>
       </section>
 
       <section className="space-y-3" aria-labelledby="overview-shipments-heading">
-        <h2 id="overview-shipments-heading" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h2
+          id="overview-shipments-heading"
+          className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        >
           Active shipments
         </h2>
         <ShipmentTable />
@@ -88,7 +113,7 @@ function Overview() {
         <h2 id="overview-decisions-heading" className="sr-only">
           Autonomous decisions
         </h2>
-        <AutonomousDecisions />
+        <AutonomousDecisions decisions={data?.autonomousDecisions} />
       </section>
     </div>
   );

@@ -21,7 +21,10 @@ export function AIResponseCard({ insight }: Props) {
       </ul>
       <div className="mt-3 flex items-center gap-2">
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-gradient-primary" style={{ width: `${insight.confidence}%` }} />
+          <div
+            className="h-full rounded-full bg-gradient-primary"
+            style={{ width: `${insight.confidence}%` }}
+          />
         </div>
         <span className="text-[11px] font-semibold text-foreground">{insight.confidence}%</span>
       </div>

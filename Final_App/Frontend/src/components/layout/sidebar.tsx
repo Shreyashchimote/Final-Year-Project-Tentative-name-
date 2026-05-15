@@ -29,10 +29,15 @@ export function SidebarNavLinks({
               "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
               active
                 ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
             )}
           >
-            <Icon className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
+            <Icon
+              className={cn(
+                "h-4 w-4",
+                active ? "text-primary" : "text-muted-foreground group-hover:text-primary",
+              )}
+            />
             <span>{item.title}</span>
             {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
           </Link>
@@ -71,5 +76,3 @@ export function Sidebar() {
     </aside>
   );
 }
-
-

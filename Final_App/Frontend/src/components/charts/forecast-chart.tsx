@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Area,
   CartesianGrid,
@@ -10,12 +11,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { forecastSeries as initialForecastSeries } from "@/mock/forecast-data";
-import { useContinuousData } from "@/hooks/useContinuousData";
+import { getDemandIntelligence } from "@/services/forecasting";
 import type { ForecastPoint } from "@/types/prediction";
 import { DemandForecastKpiStrip } from "@/components/charts/demand-forecast-kpi-strip";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyBlock, ErrorBlock, LoadingBlock } from "@/components/common/data-state";
 import { cn } from "@/lib/utils";
 
 const CRITICAL_INVENTORY_THRESHOLD = 5400;
@@ -84,7 +85,9 @@ function ForecastTooltip({
         </div>
         <div className="flex justify-between gap-6">
           <dt className="text-muted-foreground">Forecast</dt>
-          <dd className="tabular-nums font-medium text-foreground">{formatDemandDetail(row.forecast)}</dd>
+          <dd className="tabular-nums font-medium text-foreground">
+            {formatDemandDetail(row.forecast)}
+          </dd>
         </div>
         <div className="flex justify-between gap-6">
           <dt className="text-muted-foreground">Deviation</dt>
@@ -103,23 +106,34 @@ export function ForecastChart({ height = 360 }: { height?: number }) {
   const uid = useId().replace(/:/g, "");
   const gradId = `df-confidence-${uid}`;
   const [view, setView] = useState<ChartView>("combined");
+  const {
+    data: demand,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["demand-intelligence"],
+    queryFn: getDemandIntelligence,
+    staleTime: 60_000,
+  });
 
-  const streamData = useContinuousData("/api/stream/forecasting", { forecastSeries: initialForecastSeries });
-  const data = useMemo(() => enrichData(streamData.forecastSeries), [streamData.forecastSeries]);
+  const data = useMemo(() => enrichData(demand?.forecastSeries ?? []), [demand?.forecastSeries]);
 
   const showConfidence = view === "confidence" || view === "combined";
   const showActual = view === "actual" || view === "combined";
   const showForecast = view === "forecast" || view === "combined";
 
+  if (isLoading) return <LoadingBlock />;
+  if (error) return <ErrorBlock error={error} onRetry={() => refetch()} />;
+  if (!data.length || !demand) return <EmptyBlock />;
+
   return (
-    <section
-      className={cn(
-        "rounded-md border border-border/70 bg-surface p-5 sm:p-6",
-      )}
-    >
+    <section className={cn("rounded-md border border-border/70 bg-surface p-5 sm:p-6")}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <div className="min-w-0 space-y-1">
-          <h3 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">Demand Forecast</h3>
+          <h3 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
+            Demand Forecast
+          </h3>
           <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
             10-week projection with confidence bands and inventory risk.
           </p>
@@ -128,12 +142,12 @@ export function ForecastChart({ height = 360 }: { height?: number }) {
           variant="outline"
           className="shrink-0 self-start border-border/80 bg-surface-muted/50 px-3 py-1 text-[11px] font-semibold tracking-wide text-foreground"
         >
-          Accuracy 94.1%
+          Accuracy {demand.accuracy}
         </Badge>
       </div>
 
       <div className="mt-6">
-        <DemandForecastKpiStrip />
+        <DemandForecastKpiStrip items={demand.kpiStrip} />
       </div>
 
       <div className="mt-6">
@@ -243,7 +257,12 @@ export function ForecastChart({ height = 360 }: { height?: number }) {
                   strokeWidth={2}
                   strokeDasharray="6 4"
                   dot={false}
-                  activeDot={{ r: 4, strokeWidth: 1, stroke: "var(--color-surface)", fill: "var(--color-chart-2)" }}
+                  activeDot={{
+                    r: 4,
+                    strokeWidth: 1,
+                    stroke: "var(--color-surface)",
+                    fill: "var(--color-chart-2)",
+                  }}
                   connectNulls={false}
                   isAnimationActive
                   animationDuration={450}
@@ -259,7 +278,12 @@ export function ForecastChart({ height = 360 }: { height?: number }) {
                   strokeWidth={2.75}
                   strokeOpacity={0.88}
                   dot={false}
-                  activeDot={{ r: 4, strokeWidth: 1, stroke: "var(--color-surface)", fill: "var(--color-foreground)" }}
+                  activeDot={{
+                    r: 4,
+                    strokeWidth: 1,
+                    stroke: "var(--color-surface)",
+                    fill: "var(--color-foreground)",
+                  }}
                   connectNulls={false}
                   isAnimationActive
                   animationDuration={450}

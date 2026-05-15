@@ -1,12 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import {
-  LayoutDashboard,
-  Boxes,
-  TrendingUp,
-  ShieldAlert,
-  Truck,
-  Sparkles,
-} from "lucide-react";
+import { LayoutDashboard, Boxes, TrendingUp, ShieldAlert, Truck, Sparkles } from "lucide-react";
 
 export interface NavItem {
   title: string;

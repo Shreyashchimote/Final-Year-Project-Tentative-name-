@@ -1,6 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import type { ActivityEvent } from "@/types/dashboard";
-import { activityFeed as initialActivityFeed, kpiMetrics as initialKpiMetrics } from "@/mock/dashboard-data";
-import { useContinuousData } from "@/hooks/useContinuousData";
+import { getDashboardSummary } from "@/services/dashboard";
+import { EmptyBlock, ErrorBlock, LoadingBlock } from "@/components/common/data-state";
 import { cn } from "@/lib/utils";
 
 const styles = {
@@ -20,16 +21,27 @@ export function ActivityPanel({
   /** When set, only the first N events are shown. */
   previewCount?: number;
 }) {
-  const streamData = useContinuousData("/api/stream/dashboard", { activityFeed: initialActivityFeed, kpiMetrics: initialKpiMetrics });
-  const events = overrideEvents ?? streamData.activityFeed;
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["dashboard-summary"],
+    queryFn: getDashboardSummary,
+    enabled: !overrideEvents,
+    staleTime: 60_000,
+  });
+  const events = overrideEvents ?? data?.activityFeed ?? [];
 
   const list = previewCount != null ? events.slice(0, previewCount) : events;
+
+  if (!overrideEvents && isLoading) return <LoadingBlock />;
+  if (!overrideEvents && error) return <ErrorBlock error={error} onRetry={() => refetch()} />;
+  if (!list.length) return <EmptyBlock label="No activity returned" />;
 
   return (
     <div className="rounded-md border border-border/70 bg-surface">
       <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
         <h3 className="text-lg font-medium text-foreground">Agent activity</h3>
-        <span className="text-xs text-muted-foreground">{variant === "compact" ? "Recent" : "Event log"}</span>
+        <span className="text-xs text-muted-foreground">
+          {variant === "compact" ? "Recent" : "Event log"}
+        </span>
       </div>
       <ol className="relative px-5 py-4">
         <span className="absolute bottom-6 left-[21px] top-6 w-px bg-border/60" />
@@ -40,7 +52,7 @@ export function ActivityPanel({
               <span
                 className={cn(
                   "absolute left-[15px] top-1.5 h-2 w-2 rounded-full ring-4 ring-surface",
-                  s.dot
+                  s.dot,
                 )}
               />
               <div className="flex items-start justify-between gap-3">
