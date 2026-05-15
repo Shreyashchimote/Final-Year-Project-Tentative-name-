@@ -9,7 +9,7 @@ export const Route = createFileRoute("/shipments")({
   head: () => ({
     meta: [
       { title: "Shipments · Nexus SCM" },
-      { name: "description", content: "Live shipment tracking, delivery status, ETA predictions, and route intelligence." },
+      { name: "description", content: "Live shipment tracking, ETA predictions, and route intelligence." },
     ],
   }),
   component: ShipmentsPage,
@@ -27,8 +27,8 @@ function ShipmentsPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Logistics"
-        title="Shipment Operations"
-        description="Track every shipment in real-time with AI-driven ETA predictions and dynamic re-routing."
+        title="Shipments"
+        description="Real-time tracking with AI-driven ETA and dynamic re-routing."
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

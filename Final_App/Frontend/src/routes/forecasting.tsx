@@ -9,16 +9,16 @@ export const Route = createFileRoute("/forecasting")({
   head: () => ({
     meta: [
       { title: "Forecasting · Nexus SCM" },
-      { name: "description", content: "Demand forecasting, AI confidence scoring, seasonal trends, and what-if simulations." },
+      { name: "description", content: "Demand projections, AI confidence, and what-if scenarios." },
     ],
   }),
   component: ForecastingPage,
 });
 
 const scenarios = [
-  { name: "Baseline forecast", impact: "+0%", desc: "Current model projection", tone: "border-border" },
-  { name: "Promo campaign +15%", impact: "+18.4%", desc: "Suggested promo lift on SKU-330 family", tone: "border-success/30 bg-success/5" },
-  { name: "Supplier delay (ACME)", impact: "-7.2%", desc: "Modeled stock-out risk in NA-Central", tone: "border-destructive/30 bg-destructive/5" },
+  { name: "Baseline", impact: "+0%", desc: "Current model projection", tone: "border-border" },
+  { name: "Promo +15%", impact: "+18.4%", desc: "SKU-330 family lift", tone: "border-success/30 bg-success/5" },
+  { name: "Supplier delay", impact: "-7.2%", desc: "ACME stock-out risk, NA-Central", tone: "border-destructive/30 bg-destructive/5" },
 ];
 
 function ForecastingPage() {
@@ -27,7 +27,7 @@ function ForecastingPage() {
       <PageHeader
         eyebrow="Predictive Intelligence"
         title="Demand Forecasting"
-        description="14-day to 90-day projections with confidence bands, seasonal decomposition, and scenario simulation."
+        description="14 to 90-day projections with confidence bands and scenario simulation."
       />
 
       <div className="grid gap-6 xl:grid-cols-3">
@@ -41,7 +41,7 @@ function ForecastingPage() {
             <Zap className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold text-foreground">What-if Scenarios</h3>
           </div>
-          <span className="text-[11px] text-muted-foreground">3 scenarios modeled</span>
+          <span className="text-[11px] text-muted-foreground">{scenarios.length} modeled</span>
         </div>
         <div className="grid gap-3 p-5 md:grid-cols-3">
           {scenarios.map((s) => (

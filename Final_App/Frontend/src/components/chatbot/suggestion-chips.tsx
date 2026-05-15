@@ -1,10 +1,10 @@
 import { useChatbotStore } from "@/store/chatbot-store";
 
 const SUGGESTIONS = [
-  "What's the demand forecast for next 14 days?",
-  "Show me top supplier risks right now",
-  "Which SKUs need replenishment?",
-  "Summarize today's autonomous decisions",
+  "14-day demand forecast?",
+  "Top supplier risks?",
+  "SKUs needing replenishment?",
+  "Today's AI decisions",
 ];
 
 export function SuggestionChips() {

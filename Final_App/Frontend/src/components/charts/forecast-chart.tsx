@@ -77,13 +77,13 @@ function ForecastTooltip({
       <p className="font-semibold text-foreground">{row.period}</p>
       <dl className="mt-2.5 space-y-1.5 text-[11px]">
         <div className="flex justify-between gap-6">
-          <dt className="text-muted-foreground">Actual demand</dt>
+          <dt className="text-muted-foreground">Actual</dt>
           <dd className="tabular-nums font-medium text-foreground">
             {row.actual != null ? formatDemandDetail(row.actual) : "—"}
           </dd>
         </div>
         <div className="flex justify-between gap-6">
-          <dt className="text-muted-foreground">Forecast demand</dt>
+          <dt className="text-muted-foreground">Forecast</dt>
           <dd className="tabular-nums font-medium text-foreground">{formatDemandDetail(row.forecast)}</dd>
         </div>
         <div className="flex justify-between gap-6">
@@ -119,17 +119,16 @@ export function ForecastChart({ height = 360 }: { height?: number }) {
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <div className="min-w-0 space-y-1">
-          <h3 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">Demand forecast</h3>
+          <h3 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">Demand Forecast</h3>
           <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-            AI-driven projection with confidence intervals, historical actuals, and inventory risk context across a
-            10-week horizon.
+            10-week projection with confidence bands and inventory risk.
           </p>
         </div>
         <Badge
           variant="outline"
           className="shrink-0 self-start border-border/80 bg-surface-muted/50 px-3 py-1 text-[11px] font-semibold tracking-wide text-foreground"
         >
-          Forecast Accuracy 94.1%
+          Accuracy 94.1%
         </Badge>
       </div>
 
@@ -202,7 +201,7 @@ export function ForecastChart({ height = 360 }: { height?: number }) {
                 strokeDasharray="5 5"
                 strokeOpacity={0.65}
                 label={{
-                  value: "Critical Inventory Threshold",
+                  value: "Critical threshold",
                   position: "insideTopRight",
                   fill: "var(--color-muted-foreground)",
                   fontSize: 11,

@@ -16,8 +16,8 @@ export function InventoryChart({ height = 300 }: { height?: number }) {
     <div className="rounded-md border border-border bg-surface">
       <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Inventory Health Over Time</h3>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">SKU distribution by status (last 7 months)</p>
+          <h3 className="text-sm font-semibold text-foreground">Inventory Health</h3>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">SKU status, last 7 months</p>
         </div>
       </div>
       <div className="p-3" style={{ height }}>

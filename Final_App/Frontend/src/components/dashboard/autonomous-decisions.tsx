@@ -15,8 +15,8 @@ export function AutonomousDecisions() {
         <div className="flex items-center gap-2">
           <Bot className="h-4 w-4 text-muted-foreground" />
           <div>
-            <h3 className="text-lg font-medium text-foreground">Autonomous decisions</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Actions taken or queued by policy in the last hour</p>
+            <h3 className="text-lg font-medium text-foreground">AI Decisions</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Automated actions from the last hour</p>
           </div>
         </div>
       </div>

@@ -95,7 +95,7 @@ function AppShell() {
       <Sidebar />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
         <Navbar />
-        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-8 lg:px-10">
+        <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 py-8 lg:px-10">
           <Outlet />
         </main>
       </div>

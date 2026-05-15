@@ -10,7 +10,7 @@ export function WarehouseUtilization() {
           <Warehouse className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">Warehouse Utilization</h3>
         </div>
-        <span className="text-[11px] text-muted-foreground">5 facilities · live</span>
+        <span className="text-[11px] text-muted-foreground">{warehouseUtilization.length} facilities</span>
       </div>
       <div className="space-y-3 p-5">
         {warehouseUtilization.map((w) => {

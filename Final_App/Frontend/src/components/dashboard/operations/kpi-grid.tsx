@@ -6,7 +6,7 @@ export function KpiGrid({ metrics, className }: { metrics: KpiMetric[]; classNam
   return (
     <div
       className={cn(
-        "grid h-full min-h-0 grid-cols-2 grid-rows-2 gap-4 sm:gap-5 [&>*]:min-h-0",
+        "grid h-full min-h-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 [&>*]:min-h-0",
         className
       )}
     >

@@ -42,7 +42,7 @@ export function ChatWindow({ embedded = false }: Props) {
           <div className="leading-tight">
             <p className="text-sm font-semibold text-foreground">Supply Chain Copilot</p>
             <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <span className="live-dot" /> Online · explainable AI
+              <span className="live-dot" /> Online
             </p>
           </div>
         </div>

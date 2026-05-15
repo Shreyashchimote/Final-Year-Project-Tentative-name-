@@ -12,16 +12,16 @@ type StripItem = {
 
 const items: StripItem[] = [
   {
-    label: "Forecast accuracy",
+    label: "Accuracy",
     value: "94.1%",
     trend: "+0.3 pp",
     trendPositive: true,
     icon: Gauge,
   },
   {
-    label: "Expected demand spike",
+    label: "Demand spike",
     value: "+18%",
-    trend: "vs. prior horizon",
+    trend: "vs. prior period",
     trendPositive: true,
     icon: TrendingUp,
   },
@@ -34,7 +34,7 @@ const items: StripItem[] = [
   {
     label: "AI confidence",
     value: "High",
-    trend: "Model ensemble",
+    trend: "Ensemble",
     trendPositive: true,
     icon: Brain,
   },

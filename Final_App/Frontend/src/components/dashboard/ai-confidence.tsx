@@ -16,7 +16,7 @@ export function AIConfidence() {
     <div className="rounded-md border border-border bg-surface p-5">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">Model Confidence</h3>
-        <span className="text-[11px] text-muted-foreground">live · 4 models</span>
+        <span className="text-[11px] text-muted-foreground">{items.length} models</span>
       </div>
       <div className="mt-4 space-y-3.5">
         {items.map((it) => (

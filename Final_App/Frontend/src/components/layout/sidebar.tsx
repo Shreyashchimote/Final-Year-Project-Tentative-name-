@@ -62,10 +62,10 @@ export function Sidebar() {
       <div className="m-3 mt-auto shrink-0 rounded-md border border-sidebar-border bg-surface p-3">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 shrink-0 rounded-full bg-success" />
-          <p className="text-xs font-medium text-sidebar-foreground">Systems operational</p>
+          <p className="text-xs font-medium text-sidebar-foreground">All systems healthy</p>
         </div>
         <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">
-          12 agents online · Last incident: none (90d)
+          12 agents active · No incidents (90 days)
         </p>
       </div>
     </aside>

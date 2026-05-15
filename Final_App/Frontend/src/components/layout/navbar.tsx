@@ -22,7 +22,7 @@ export function Navbar() {
         <div className="relative min-w-0 flex-1 max-w-lg">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search orders, shipments, SKUs…"
+            placeholder="Search orders, SKUs, shipments…"
             className="h-9 border-border/80 bg-surface pl-9 text-sm shadow-none focus-visible:ring-1"
           />
         </div>

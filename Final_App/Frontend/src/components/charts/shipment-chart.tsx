@@ -16,8 +16,8 @@ export function ShipmentChart({ height = 280 }: { height?: number }) {
     <div className="rounded-md border border-border bg-surface">
       <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Shipment Volume — last 7 days</h3>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">On-time vs delayed vs at-risk</p>
+          <h3 className="text-sm font-semibold text-foreground">Shipment Volume — 7 days</h3>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">On time vs. delayed vs. at risk</p>
         </div>
       </div>
       <div className="p-3" style={{ height }}>

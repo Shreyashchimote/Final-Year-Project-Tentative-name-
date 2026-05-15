@@ -26,10 +26,10 @@ export function RiskChart({ height = 320 }: { height?: number }) {
     <div className="rounded-md border border-border bg-surface">
       <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Risk Exposure by Category</h3>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">Probability × impact, scored 0–100</p>
+          <h3 className="text-sm font-semibold text-foreground">Risk by Category</h3>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Probability × impact, 0–100</p>
         </div>
-        <span className="text-[11px] text-muted-foreground">7 categories monitored</span>
+        <span className="text-[11px] text-muted-foreground">{riskMatrix.length} categories</span>
       </div>
       <div className="p-3" style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">

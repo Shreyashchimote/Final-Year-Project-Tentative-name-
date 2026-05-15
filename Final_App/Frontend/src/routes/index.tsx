@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Operations Overview · Nexus SCM" },
-      { name: "description", content: "Control tower view of shipments, demand, and autonomous decisions." },
+      { name: "description", content: "Live overview of shipments, demand, and autonomous decisions." },
     ],
   }),
   component: Overview,
@@ -31,7 +31,7 @@ function Overview() {
     <div className="flex w-full min-w-0 flex-col gap-10 pb-2">
       <PageHeader
         title="Operations Overview"
-        description="Network health, demand signal, and exceptions in one place — updated as your systems refresh."
+        description="Live network health, demand signals, and exceptions."
         actions={
           <button
             type="button"
@@ -48,21 +48,21 @@ function Overview() {
           id="overview-snapshot-heading"
           className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
         >
-          Operational snapshot
+          Snapshot
         </h2>
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
-          <div className="flex min-h-0 min-w-0 flex-1 basis-0 lg:min-h-[22rem]">
-            <KpiGrid metrics={overviewKpiMetrics} className="h-full w-full min-h-[20rem] lg:min-h-0" />
+        <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-2">
+          <div className="min-w-0">
+            <KpiGrid metrics={overviewKpiMetrics} className="h-full w-full" />
           </div>
-          <div className="flex min-h-0 min-w-0 flex-1 basis-0 lg:min-h-[22rem]">
-            <MonthlyLogisticsPie className="h-full w-full min-h-[20rem] lg:min-h-0" />
+          <div className="min-w-0">
+            <MonthlyLogisticsPie className="h-full w-full" />
           </div>
         </div>
       </section>
 
       <section className="space-y-3" aria-labelledby="overview-forecast-heading">
         <h2 id="overview-forecast-heading" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Demand intelligence
+          Forecast
         </h2>
         <ForecastChart height={400} />
       </section>
@@ -79,7 +79,7 @@ function Overview() {
 
       <section className="space-y-3" aria-labelledby="overview-shipments-heading">
         <h2 id="overview-shipments-heading" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Shipments
+          Active shipments
         </h2>
         <ShipmentTable />
       </section>

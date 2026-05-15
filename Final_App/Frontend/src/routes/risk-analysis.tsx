@@ -12,7 +12,7 @@ export const Route = createFileRoute("/risk-analysis")({
   head: () => ({
     meta: [
       { title: "Risk Analysis · Nexus SCM" },
-      { name: "description", content: "Anomaly detection, supplier risk scoring, and predictive risk analytics." },
+      { name: "description", content: "Supplier risk scoring, anomaly detection, and predictive risk analytics." },
     ],
   }),
   component: RiskPage,
@@ -31,9 +31,9 @@ function RiskPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Risk Intelligence"
-        title="Supply Chain Risk Analysis"
-        description="Predictive risk analytics across suppliers, logistics, demand shocks, and external disruptions."
+        eyebrow="Risk"
+        title="Risk Analysis"
+        description="Risk exposure across suppliers, logistics, and external disruptions."
       />
 
       <div className="grid gap-3 md:grid-cols-3">
@@ -43,15 +43,15 @@ function RiskPage() {
             <p className="text-xs font-semibold uppercase tracking-wider text-destructive">High exposure</p>
           </div>
           <p className="mt-2 text-2xl font-semibold text-foreground">{high}</p>
-          <p className="text-[11px] text-muted-foreground">categories above threshold</p>
+          <p className="text-[11px] text-muted-foreground">above threshold</p>
         </div>
         <div className="rounded-md border border-border bg-surface p-4">
           <div className="flex items-center gap-2">
             <ShieldAlert className="h-4 w-4 text-primary" />
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Network risk score</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Network risk</p>
           </div>
           <p className="mt-2 text-2xl font-semibold text-foreground">58<span className="text-sm text-muted-foreground"> / 100</span></p>
-          <p className="text-[11px] text-muted-foreground">+4 vs last week</p>
+          <p className="text-[11px] text-muted-foreground">+4 vs. last week</p>
         </div>
         <div className="rounded-md border border-border bg-surface p-4">
           <div className="flex items-center gap-2">
@@ -59,7 +59,7 @@ function RiskPage() {
             <p className="text-xs font-semibold uppercase tracking-wider text-warning-foreground">Anomalies (24h)</p>
           </div>
           <p className="mt-2 text-2xl font-semibold text-foreground">14</p>
-          <p className="text-[11px] text-muted-foreground">9 auto-resolved · 5 in review</p>
+          <p className="text-[11px] text-muted-foreground">{9} resolved · {5} reviewing</p>
         </div>
       </div>
 
@@ -67,8 +67,8 @@ function RiskPage() {
         <div className="xl:col-span-2"><RiskChart /></div>
         <div className="rounded-md border border-border bg-surface">
           <div className="border-b border-border px-5 py-3.5">
-            <h3 className="text-sm font-semibold text-foreground">Network risk trend</h3>
-            <p className="text-[11px] text-muted-foreground">8-week aggregate score</p>
+            <h3 className="text-sm font-semibold text-foreground">Risk Trend</h3>
+            <p className="text-[11px] text-muted-foreground">8-week score</p>
           </div>
           <div className="p-3" style={{ height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">

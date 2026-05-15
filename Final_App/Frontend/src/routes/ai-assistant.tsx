@@ -8,27 +8,27 @@ export const Route = createFileRoute("/ai-assistant")({
   head: () => ({
     meta: [
       { title: "AI Assistant · Nexus SCM" },
-      { name: "description", content: "Full AI workspace for explainable analytics, recommendations, report generation, and dashboard control." },
+      { name: "description", content: "AI workspace for analytics, recommendations, and natural-language control." },
     ],
   }),
   component: AssistantPage,
 });
 
 const capabilities = [
-  { Icon: BarChart3, title: "Analytics queries", desc: "Ask anything about KPIs, trends, anomalies." },
-  { Icon: Brain, title: "Explainable AI", desc: "Understand why each model made a decision." },
-  { Icon: Sparkles, title: "Recommendations", desc: "Receive actionable suggestions across the network." },
-  { Icon: FileText, title: "Report generation", desc: "Auto-generate executive briefings on demand." },
-  { Icon: Workflow, title: "Dashboard control", desc: "Drive the platform with natural language commands." },
+  { Icon: BarChart3, title: "Analytics", desc: "Query KPIs, trends, and anomalies." },
+  { Icon: Brain, title: "Explainable AI", desc: "Understand every model decision." },
+  { Icon: Sparkles, title: "Recommendations", desc: "Actionable suggestions across the network." },
+  { Icon: FileText, title: "Reports", desc: "Generate executive briefings on demand." },
+  { Icon: Workflow, title: "Dashboard control", desc: "Drive the platform with natural language." },
 ];
 
 function AssistantPage() {
   const send = useChatbotStore((s) => s.send);
   const prompts = [
-    "Generate this week's executive supply chain briefing.",
-    "Why did the risk score for ACME-2241 spike?",
-    "Compare forecast accuracy across regions for the last quarter.",
-    "List all SKUs at critical stock and recommend reorder quantities.",
+    "Generate this week's executive briefing.",
+    "Why did ACME-2241's risk score spike?",
+    "Compare forecast accuracy by region, last quarter.",
+    "List critical-stock SKUs with reorder quantities.",
   ];
 
   return (
@@ -36,7 +36,7 @@ function AssistantPage() {
       <PageHeader
         eyebrow="AI Workspace"
         title="Supply Chain Copilot"
-        description="A full conversational workspace for analytics, explanations, recommendations, and natural-language control."
+        description="Analytics, explanations, and recommendations via natural language."
       />
 
       <div className="grid gap-6 xl:grid-cols-[380px_1fr]">

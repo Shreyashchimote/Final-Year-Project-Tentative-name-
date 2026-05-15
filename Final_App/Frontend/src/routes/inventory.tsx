@@ -12,7 +12,7 @@ export const Route = createFileRoute("/inventory")({
   head: () => ({
     meta: [
       { title: "Inventory · Nexus SCM" },
-      { name: "description", content: "AI inventory analytics, reorder recommendations, and warehouse utilization." },
+      { name: "description", content: "Stock levels, reorder signals, and warehouse utilization." },
     ],
   }),
   component: InventoryPage,
@@ -32,16 +32,16 @@ function InventoryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Inventory Intelligence"
-        title="Inventory & Stock Health"
-        description="AI-driven stock level analytics, reorder recommendations, and live warehouse signals."
+        eyebrow="Inventory"
+        title="Stock Health"
+        description="Live stock levels, reorder signals, and warehouse capacity."
       />
 
       {critical > 0 && (
         <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4">
           <AlertTriangle className="h-5 w-5 text-destructive" />
           <div>
-            <p className="text-sm font-semibold text-destructive">{critical} SKU(s) in critical state</p>
+            <p className="text-sm font-semibold text-destructive">{critical} critical SKU{critical > 1 ? "s" : ""}</p>
             <p className="text-xs text-muted-foreground">Auto-replenishment triggered. Review pending POs.</p>
           </div>
         </div>
@@ -58,7 +58,7 @@ function InventoryPage() {
             <Boxes className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold text-foreground">SKU-Level Inventory</h3>
           </div>
-          <span className="text-[11px] text-muted-foreground">{inventoryItems.length} SKUs · live</span>
+          <span className="text-[11px] text-muted-foreground">{inventoryItems.length} SKUs</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
